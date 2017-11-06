@@ -8,21 +8,25 @@ import io
 yearly_datasets_dict = {2000: 223, 2001: 224, 2002: 225, 2003: 226, 2004: 202, 2005: 203,
                         2006: 227, 2007: 228, 2008: 229, 2009: 230, 2010: 231, 2011: 232,
                         2012: 233, 2013: 234, 2014: 235, 2015: 236, 2016: 242}
+
 giodo_pjp_url = "http://powietrze.gios.gov.pl/pjp/archives/downloadFile"
 
-for iter_key, iter_item in yearly_datasets_dict.items():
-    print(iter_key, ": ", iter_item)
 
-def download_data(yearly_datasets_dict, giodo_pjp_url):
-    for iter_key in yearly_datasets_dict:
-        pass
+def download_data(yearly_datasets_dict, giodo_pjp_url, data_dir):
+    """
+    This function is used to download the data from the website and unpack it into the "data" folder of the package
+    :param yearly_datasets_dict: dictionary with mappings of years covered by data to
+    last elements of paths to zipped data
+    :param giodo_pjp_url: main address part
+    :param data_dir: directory to the folder into which the downloaded data should be unpacked
+    """
 
-test_url = "/".join((giodo_pjp_url, "223"))
-
-r = requests.get(url=test_url, stream=True)
-z = zipfile.ZipFile(io.BytesIO(r.content))
-z.extractall(path=data_dir)
-
-for key in list(yearly_measurements_dict.keys()):
-    print(key)
+    for iter_year, iter_address in yearly_datasets_dict.items():
+        print("Data for year: ", iter_year)
+        # iterate over consecutive years
+        iter_url = "/".join((giodo_pjp_url, iter_address))
+        print("Downloading from address: ", iter_url)
+        r = requests.get(url=iter_url, stream=True) # make a query and save the response into 'r'
+        z = zipfile.ZipFile(io.BytesIO(r.content)) # save the content of request result into zipfile
+        z.extractall(path=data_dir) # extract into a specific location
 
