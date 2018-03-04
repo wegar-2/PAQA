@@ -1,6 +1,8 @@
 import os
 import sys
 import logging
+# Python looks for imports in the list of paths sys.path
+import download_data
 
 
 ### 0. prepare a logger
