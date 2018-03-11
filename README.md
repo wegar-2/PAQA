@@ -15,5 +15,6 @@ The following Python packages are used:
 	a) SQLAlchemy
 	b) Pandas
 	c) numpy
-	d) matplotlib.
+	d) matplotlib
+	e) logging
 
