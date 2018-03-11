@@ -16,5 +16,6 @@ The following Python packages are used:
 	b) Pandas
 	c) numpy
 	d) matplotlib.
+	e) dupa
 
 
