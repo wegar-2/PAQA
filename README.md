@@ -17,5 +17,7 @@ The following Python packages are used:
 	c) numpy
 	d) matplotlib.
 	e) dupa
-
+	f) chuj
+	g) kamieni kupa
+	h) chuj z ta polska wschodnia
 
