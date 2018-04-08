@@ -6,14 +6,14 @@ import io
 
 
 # data access URL
-yearly_datasets_dict = {2000: "223", 2001: "224", 2002: "225", 2003: "226", 2004: "202", 2005: "203",
+my_yearly_datasets_dict = {2000: "223", 2001: "224", 2002: "225", 2003: "226", 2004: "202", 2005: "203",
                         2006: "227", 2007: "228", 2008: "229", 2009: "230", 2010: "231", 2011: "232",
                         2012: "233", 2013: "234", 2014: "235", 2015: "236", 2016: "242"}
 
-giodo_pjp_url = "http://powietrze.gios.gov.pl/pjp/archives/downloadFile"
+my_giodo_pjp_url = "http://powietrze.gios.gov.pl/pjp/archives/downloadFile"
 
 
-def download_data(yearly_datasets_dict, giodo_pjp_url, data_dir):
+def download_data(data_dir, yearly_datasets_dict = my_yearly_datasets_dict, giodo_pjp_url = my_giodo_pjp_url):
     """
     This function is used to download the data from the website and unpack it into the "data" folder of the package
     :param yearly_datasets_dict: dictionary with mappings of years covered by data to
