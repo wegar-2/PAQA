@@ -40,6 +40,8 @@ else:
 # 3. Setting up the data base
 if __name__ == "__main__":
     # 1. calling the data-downloading function
+    mlogger.info("---------------------------------------------------")
+    mlogger.info("1. ")
     mlogger.info("Checking the contents of /data.")
     mlogger.info("The /data folder contains the following files: ")
     for iter_num, iter_el in enumerate(os.listdir(data_dir)):
@@ -51,5 +53,8 @@ if __name__ == "__main__":
     else:
         pass
     # 2. logging in as root to MySQL DB server to set up a schema and a user
+    mlogger.info("---------------------------------------------------")
+    mlogger.info("2. ")
+    mlogger.info("Uploading the data into MySQL server. ")
 
 
