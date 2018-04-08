@@ -1,41 +1,55 @@
 import os
 import sys
 import logging
-# Python looks for imports in the list of paths sys.path
 import download_data as dd
 
+# ----------------------------------------------------------------------------------------------------------------------
+# 1. Set up logging
+# create a logger and set its severity
+mlogger = logging.getLogger(name="my_logger")
+mlogger.setLevel(level=logging.INFO)
 
-### 0. prepare a logger
-# mlogger = logging.getLogger(name="main_logger") # create a logger
-# mlogger.setLevel(level=logging.INFO) # set the level on the mlogger logger
-# # create a handler for mlogger
-# ch = logging.StreamHandler() # create a handler
-# ch.setLevel(level=logging.INFO) # set the level for the handler
-# # configure the formatting of the output produced by console handler
-# formatter = logging.Formatter(fmt="%(asctime)s - %(name)s - %(level)s - %(message)s")
-# ch.setFormatter(fmt=formatter)
-# # add the console handler to mlogger
-# mlogger.addHandler(hdlr=ch)
+# create a handler and set its severity
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+
+# create a formatter and add it to the handler
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+
+# add the handler to the logger
+mlogger.addHandler(ch)
+# ----------------------------------------------------------------------------------------------------------------------
 
 
-# 1. Prepare some other useful variables
-# mlogger.info(msg="Setting up variables and configuring the directories. ")
-
-this_script_path = os.path.abspath(__file__)
-this_script_dir = os.path.dirname(this_script_path) # package directory
-# this_script_dir = os.getcwd()
-# check whether there is a folder for data
+# ----------------------------------------------------------------------------------------------------------------------
+# 2. Prepare some other useful variables
+# get directory to the folder with this script
+this_script_dir = os.path.dirname(os.path.abspath(__file__)) # package directory
+# check whether a folder /data exists
 data_dir = os.path.join(this_script_dir, "data")
-if not os.path.isfile(path=data_dir):
+if not os.path.exists(path=data_dir):
+    mlogger.info("Folder for data does not exist yet - creating a new one. ")
     os.system(command="mkdir " + data_dir)
+else:
+    mlogger.info("Folder for data already exists.")
+# ----------------------------------------------------------------------------------------------------------------------
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+# 3. Setting up the data base
 if __name__ == "__main__":
-    # call the script that downloads the data from http://powietrze.gios.gov.pl/pjp/archives and unpacks it
-    # mlogger.info(msg="Looking for data on disk and/or getting the data from GIOS website.")
-    os.system("python3.6 download_data.py")
-    # calling the data-downloading function
-    print("calling the data-downloading function")
-    dd.download_data(yearly_datasets_dict=dd.yearly_datasets_dict,
-                     giodo_pjp_url=dd.giodo_pjp_url,
-                     data_dir=data_dir)
+    # 1. calling the data-downloading function
+    mlogger.info("Checking the contents of /data.")
+    mlogger.info("The /data folder contains the following files: ")
+    for iter_num, iter_el in enumerate(os.listdir(data_dir)):
+        mlogger.info(msg="\t" + str(iter_num) + ": " + iter_el)
+    bool_d = input("Do you want to dowload/re-download files from GIOS archive? "
+                   "Type in y/Y for yes or any other input for no. ")
+    if bool_d in ("y", "Y"):
+        dd.download_data(data_dir=data_dir)
+    else:
+        pass
+    # 2. logging in as root to MySQL DB server to set up a schema and a user
+
+
