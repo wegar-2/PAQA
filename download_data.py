@@ -1,38 +1,44 @@
-import os
-import sys
 import requests
 import zipfile
 import io
+import logging
+import constants
+
+# 0. logger setup
+main_logger = logging.getLogger(name="main_logger")
 
 
-# data access URL
-my_yearly_datasets_dict = {2000: "223", 2001: "224", 2002: "225", 2003: "226", 2004: "202", 2005: "203",
-                           2006: "227", 2007: "228", 2008: "229", 2009: "230", 2010: "231", 2011: "232",
-                           2012: "233", 2013: "234", 2014: "235", 2015: "236", 2016: "242"}
-
-my_giodo_pjp_url = "http://powietrze.gios.gov.pl/pjp/archives/downloadFile"
-
-
-def download_data(data_dir, yearly_datasets_dict = my_yearly_datasets_dict, giodo_pjp_url = my_giodo_pjp_url):
+# 2. main function
+def download_data(data_dir=constants.data_dir, yearly_datasets_dict=constants.my_yearly_datasets_dict,
+                  giodo_pjp_url=constants.my_giodo_pjp_url, metadata_sets_dict=constants.metadata_sets_dict):
     """
     This function is used to download the data from the website and unpack it into the "data" folder of the package
     :param yearly_datasets_dict: dictionary with mappings of years covered by data to
     last elements of paths to zipped data
     :param giodo_pjp_url: main address part
     :param data_dir: directory to the folder into which the downloaded data should be unpacked
+    :param metadata_sets_dict: dictionary of files that contain metadata
     """
+    main_logger.info(msg="Inside the download_data function: starting the data download/update...")
+    # A. metadata files
+    main_logger.info(msg="\n\n\n---------- Downloading metadata ----------")
+    for item_key, item_val in metadata_sets_dict.items():
+        iter_url = "/".join((giodo_pjp_url, item_val))
+        main_logger.info(msg="Extracting: " + str(item_key))
+        r = requests.get(url=iter_url)
+        z = zipfile.ZipFile(io.BytesIO(r.content))
 
-    # what should be added here is checking whether file exists before actually starting the extraction
-
+    # B. data files
+    main_logger.info(msg="\n\n\n---------- Downloading data ----------")
     for iter_year, iter_address in yearly_datasets_dict.items():
-        print("Data for year: ", iter_year)
+        main_logger.info(msg="Data for year: " + str(iter_year))
         # iterate over consecutive years
         iter_url = "/".join((giodo_pjp_url, iter_address))
-        print("Downloading from address: ", iter_url)
+        main_logger.info("Downloading data from address: " + iter_url)
         r = requests.get(url=iter_url, stream=True) # make a query and save the response into 'r'
         z = zipfile.ZipFile(io.BytesIO(r.content)) # save the content of request result into zipfile
         # ZipFile.namelist() <== use it to check whether the files are already available
-        # z.namelist()
+        main_logger.info(msg="Displaying the z.namelist(): ")
+        main_logger.info(msg=z.namelist())
         z.extractall(path=data_dir) # extract into a specific location
-
 
