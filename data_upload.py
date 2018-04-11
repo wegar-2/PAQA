@@ -1,14 +1,17 @@
+import logging
 import pandas as pd
 import os
 
 
 this_folder = os.path.dirname(os.path.abspath(__file__))
-this_folder = "/home/herhor/github_repos/PAQA"
+# this_folder = "/home/herhor/github_repos/PAQA"
 data_folder = os.path.join(this_folder, "data")
 
-print("Data folder: ")
-print(data_folder)
+# 0. set up a logger
+main_logger = logging.getLogger(name="main_logger")
 
+
+main_logger.info(msg="Data folder: " + data_folder)
 test_file_name = "2016_PM10_24g.xlsx"
 
 datafile_path = os.path.join(data_folder, test_file_name)
@@ -43,7 +46,7 @@ df5 = df4.copy()
 
 df5.loc[:, "place-pollution-time"].apply()
 
-df5.loc[:, "city"] =
+df5.loc[:, "city"]
 
 df4.to_csv(os.path.join(data_folder, "my_check.csv"))
 

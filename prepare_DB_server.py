@@ -1,6 +1,8 @@
 import sqlalchemy as sa
 import logging
 
+# 0. getting a logger
+main_logger = logging.getLogger(name="main_logger")
 
 # 1. create connection string
 root_pass = input("Type in the root password. ")
@@ -18,7 +20,8 @@ temp_connection.execute("FLUSH PRIVILEGES; ")
 temp_connection.close()
 del mysqldb_engine
 
-# 4.
+# 4. create connection engine as PAQA_USER to PAQA_DB
+mysqldb_engine = sa.create_engine("mysql://PAQA_USER:pass@localhost/PAQA_DB")
 
 
 
