@@ -43,7 +43,8 @@ def setup_of_the_DB():
     try:
         sa.Table('STATIONS', metadata1,
                  sa.Column('id_station', sa.INT, primary_key=True, autoincrement=True, nullable=False),
-                 sa.Column('station_name', sa.VARCHAR(100), nullable=False),
+                 sa.Column('old_station_name', sa.VARCHAR(100), nullable=False),
+                 sa.Column('new_station_name', sa.VARCHAR(100), nullable=False),
                  sa.Column('id_city', sa.INT, sa.ForeignKey('CITIES.id_city'), nullable=False))
         metadata1.create_all()
     except Exception as exc:
@@ -59,7 +60,8 @@ def setup_of_the_DB():
                  sa.Column('id_station', sa.INT, sa.ForeignKey('STATIONS.id_station'), nullable=False),
                  sa.Column('measurement_date', sa.DATE, nullable=False),
                  sa.Column('measurement_value', sa.FLOAT(18, 4), nullable=False),
-                 sa.Column('measurement_unit', sa.VARCHAR(10), nullable=False))
+                 sa.Column('measurement_unit', sa.VARCHAR(10), nullable=False),
+                 sa.Column('pollutant', sa.VARCHAR(5), nullable=False))
         metadata1.create_all()
     except Exception as exc:
         main_logger.error(msg="Error occurred when trying to create table POLLUTION_DATA")
