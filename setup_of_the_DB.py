@@ -43,8 +43,9 @@ def setup_of_the_DB():
     try:
         sa.Table('STATIONS', metadata1,
                  sa.Column('id_station', sa.INT, primary_key=True, autoincrement=True, nullable=False),
-                 sa.Column('old_station_name', sa.VARCHAR(100), nullable=False),
-                 sa.Column('new_station_name', sa.VARCHAR(100), nullable=False),
+                 sa.Column('station_name', sa.VARCHAR(100), nullable=False),
+                 sa.Column('old_station_code', sa.VARCHAR(100), nullable=False),
+                 sa.Column('new_station_code', sa.VARCHAR(100), nullable=False),
                  sa.Column('id_city', sa.INT, sa.ForeignKey('CITIES.id_city'), nullable=False))
         metadata1.create_all()
     except Exception as exc:
