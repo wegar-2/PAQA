@@ -3,6 +3,7 @@ import zipfile
 import io
 import logging
 import constants
+import os
 
 # 0. logger setup
 main_logger = logging.getLogger(name="main_logger")
@@ -22,11 +23,18 @@ def download_data(data_dir=constants.data_dir, yearly_datasets_dict=constants.my
     main_logger.info(msg="Inside the download_data function: starting the data download/update...")
     # A. metadata files
     main_logger.info(msg="\n\n\n---------- Downloading metadata ----------")
-    for item_key, item_val in metadata_sets_dict.items():
-        iter_url = "/".join((giodo_pjp_url, item_val))
-        main_logger.info(msg="Extracting: " + str(item_key))
+    for iter_key, iter_val in metadata_sets_dict.items():
+        main_logger.info(msg="\n\n")
+        iter_url = "/".join((giodo_pjp_url, iter_val))
+        main_logger.info(msg="Extracting: " + str(iter_key))
+        main_logger.info(msg="Getting data from URL: " + iter_url)
         r = requests.get(url=iter_url)
-        z = zipfile.ZipFile(io.BytesIO(r.content))
+        iter_name = iter_key + ".xlsx"
+        main_logger.info(msg="iter_name: " + iter_name)
+        main_logger.info(msg="saving to path: " + os.path.join(data_dir, iter_name))
+        iter_output = open(file=os.path.join(data_dir, iter_name), mode='wb')
+        iter_output.write(r.content)
+        iter_output.close()
 
     # B. data files
     main_logger.info(msg="\n\n\n---------- Downloading data ----------")
