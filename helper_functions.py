@@ -23,7 +23,7 @@ def df_cols_to_utf(df_in, list_of_cols):
     This function converts indicated columns in the data frame by decoding the text.
     """
     df_out = df_in.copy()
-    full_list_of_cols = list(df_in.columns)
+    full_list_of_cols = list(df_out.columns)
 
     def decode_series(series_in):
         list_out = list(series_in)
@@ -36,7 +36,7 @@ def df_cols_to_utf(df_in, list_of_cols):
 
     for iter_col in full_list_of_cols:
         if iter_col in list_of_cols:
-            df_in.loc[:, iter_col] = decode_series(series_in=df_in.loc[:, iter_col])
+            df_out.loc[:, iter_col] = decode_series(series_in=df_out.loc[:, iter_col])
     return df_out
 # ----------------------------------------------------------------------------------------------------------------------
 
