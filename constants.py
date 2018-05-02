@@ -27,3 +27,20 @@ pollutants_dict = {"nitrogen_dioxide": "NO2",
                    "benzene": "C6H6"}
 
 data_frequency = "24g"
+
+
+dict_cities_tab_colnames = {"id_city", "city_name"}
+
+
+dict_of_stations_colnames = {'Stary Kod stacji': 'old_station_code',
+                             'Kod stacji': 'new_station_code',
+                             'Nazwa stacji': 'station_name',
+                             'index': 'id_station'}
+
+stations_cities_cols = ['Kod stacji', 'Stary Kod stacji', 'Miejscowosc', 'Nazwa stacji']
+
+
+dir_data_stations = os.path.expanduser("~/github_repos/PAQA/data/metadane_stacje_i_stanowiska.xlsx")
+sheetname_data_stations = "Stacje"
+
+

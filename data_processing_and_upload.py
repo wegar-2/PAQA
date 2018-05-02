@@ -6,6 +6,7 @@ import sqlalchemy as sa
 import unidecode
 import constants
 import pickle
+import helper_functions as hf
 
 # 0. get the main_logger
 main_logger = logging.getLogger(name="main_logger")
@@ -14,20 +15,18 @@ main_logger = logging.getLogger(name="main_logger")
 # -------------------------------------
 # 1. CITIES and STATIONS tables -------
 # -------------------------------------
-data_file = "/home/herhor/github_repos/PAQA/data/metadane_stacje_i_stanowiska.xlsx"
 
-
-def upload_cities_and_stations_data(data_file=data_file):
+def upload_cities_and_stations_data():
     """
     This function performs upload of the data on cities and stations into the database.
-    :param data_file:
-    :return:
     """
     # ------------------------------------------------------------------------------------------------------------------
     # 1. CITIES
-    dir_data = "/home/herhor/github_repos/PAQA/data/metadane_stacje_i_stanowiska.xlsx"
-    data1 = pd.read_excel(dir_data, sheet_name="Stacje")
-    distinct_cities = list(set(list(data1.loc[:, "Miejscowość"])))
+    data1 = pd.read_excel(constants.dir_data_stations,
+                          sheet_name=constants.sheetname_data_stations)
+    data1 = hf.df_cols_to_utf(df_in=hf.df_colnames_to_utf(df_in=data1),
+                              list_of_cols=constants.stations_cities_cols)
+    distinct_cities = list(set(list(data1.loc[:, "Miejscowosc"])))
     if np.nan in distinct_cities:
         distinct_cities.remove(np.nan)
     if "OTHER" not in distinct_cities:
@@ -36,6 +35,11 @@ def upload_cities_and_stations_data(data_file=data_file):
     for iter_num, iter_val in enumerate(distinct_cities):
         distinct_cities[iter_num] = unidecode.unidecode(iter_val)
     df_cities = pd.DataFrame(data={"city_name": list(distinct_cities)})
+    df_cities.sort_values(by="city_name", inplace=True)
+    df_cities.reset_index(drop=True, inplace=True)
+    df_cities.reset_index(inplace=True, drop=False)
+    df_cities.rename(columns={"index": "id_city"}, inplace=True)
+    df_cities.loc[:, "id_city"] = df_cities.loc[:, "id_city"] + 1
 
     # ------------------------------------------------------------------------------------------------------------------
     # 2. STATIONS
@@ -44,20 +48,37 @@ def upload_cities_and_stations_data(data_file=data_file):
         list(data1.loc[:, 'Stary Kod stacji']),
         list(data1.loc[:, 'Kod stacji'])
     ))
-    with open(os.path.dirname(data_file), mode='wb') as target_file:
+    with open(os.path.join(constants.data_dir, "stations_code_mappings.p"), mode='wb') as target_file:
         pickle.dump(station_codes_mappings, file=target_file)
     # 2.2. prepare the data frame with data on stations
-    df_stations = data1.loc[:, ['Nazwa stacji', 'Stary Kod stacji', 'Kod stacji', 'Miejscowość']]
-    new_colnames
-
-
+    df_stations = data1.loc[:, constants.stations_cities_cols]
+    df_stations = pd.merge(left=df_stations, right=df_cities, left_on="Miejscowosc", right_on="city_name")
+    df_stations.drop(["city_name", "Miejscowosc"], axis=1, inplace=True)
+    df_stations.reset_index(inplace=True, drop=False)
+    df_stations.rename(columns=constants.dict_of_stations_colnames, inplace=True)
+    df_stations.loc[:, "id_station"] = df_stations.loc[:, "id_station"] + 1
 
     # ------------------------------------------------------------------------------------------------------------------
     # 3. upload the data frames df_cities and df_stations into the dedicated tables in the database
-    engine1 = sa.create_engine("mysql+mysqldb://PAQA_USER:pass@localhost/")
+    engine1 = sa.create_engine("mysql+mysqldb://PAQA_USER:pass@localhost/PAQA_DB")
     connection1 = engine1.connect()
-    df_cities.to_sql(name='CITIES', schema='PAQA_DB', if_exists='append', index=False, con=connection1)
 
+    # 3.1. upload the CITIES table
+    main_logger.info(msg="\n\n\nUploading table: CITIES")
+    main_logger.info(msg="The CITIES dataframe: ")
+    main_logger.info(msg=df_cities)
+    df_cities.to_sql(name="CITIES", con=connection1,
+                     if_exists="append", index=False)
+
+    # 3.2. upload the STATIONS table
+    main_logger.info(msg="\n\n\nUploading table: STATIONS")
+    main_logger.info(msg="The STATIONS dataframe: ")
+    main_logger.info(msg=df_stations)
+    df_stations.to_sql(name="STATIONS", con=connection1,
+                       if_exists="append", index=False)
+
+    connection1.close()
+    del connection1, engine1
 
 
 def update_station_code(codes_old_new_mapping, code_in):
@@ -82,21 +103,6 @@ def update_station_code(codes_old_new_mapping, code_in):
 # -----------------------------------
 
 
-test_df = pd.read_excel("/home/herhor/github_repos/PAQA/data/2012_PM10_24g.xlsx")
-test_df.iloc[0:5, 0:5]
-test_df_2 = test_df.iloc[2:, :]
-test_df_2.iloc[0:5, 0:5]
-test_df_2.reset_index(inplace=True, drop=True)
-test_df_2 = test_df_2.rename(columns={"Kod stacji": "date"})
-test_df_2.iloc[0:5, 0:5]
-
-new_colnames = [update_station_code(codes_old_new_mapping=station_codes_mappings,
-                                    code_in=el) for el in list(test_df_2.columns)[1:]]
-list(test_df_2.columns)[1]
-list(station_codes_mappings.keys())[0:10]
-list(station_codes_mappings.values())[0:10]
-
-
 def process_the_datafile(df_in):
     """
     This function processes a data frame containing data loaded from an xlsx file with data.
@@ -106,31 +112,26 @@ def process_the_datafile(df_in):
     """
 
 
-
-dir_data = os.path.join(os.getcwd(), "data")
-files_in_dir_data = os.listdir(dir_data)
-data_for_years = [str(el) for el in constants.my_yearly_datasets_dict.keys()]
-
 # iterations - over pollutants' dictionary
-for iter_key, iter_val in constants.pollutants_dict.items():
-    main_logger.info(msg="\n\n\n")
-    main_logger.info(msg="--------------------------------------------------")
-    main_logger.info(msg="Current pollutant name: " + iter_key)
-    main_logger.info(msg="Current pollutant code: " + iter_val)
-    # check whether data exists for the current pollutant for various years
-    for iter_year in data_for_years:
-        iter_file_name = "_".join([iter_year, iter_val, constants.data_frequency]) + ".xlsx"
-        main_logger.info("Checking for file: " + iter_file_name)
-        if iter_file_name in files_in_dir_data:
-            main_logger.info(msg="\t\tFile found. Processing and uploading. ")
-            try:
-                iter_file_path = os.path.join(dir_data, iter_file_name)
-                iter_data = pd.read_excel(iter_file_name)
-                iter_data = process_the_datafile(df_in=iter_data)
-            except Exception as exc:
-                main_logger.error(msg="Error occurred when loading file: " + iter_file_path)
-                main_logger.error(msg=exc)
-        else:
-            main_logger.info(msg="\t\tFile not found. Moving on to next file. ")
-
-
+# for iter_key, iter_val in constants.pollutants_dict.items():
+#     main_logger.info(msg="\n\n\n")
+#     main_logger.info(msg="--------------------------------------------------")
+#     main_logger.info(msg="Current pollutant name: " + iter_key)
+#     main_logger.info(msg="Current pollutant code: " + iter_val)
+#     # check whether data exists for the current pollutant for various years
+#     for iter_year in data_for_years:
+#         iter_file_name = "_".join([iter_year, iter_val, constants.data_frequency]) + ".xlsx"
+#         main_logger.info("Checking for file: " + iter_file_name)
+#         if iter_file_name in files_in_dir_data:
+#             main_logger.info(msg="\t\tFile found. Processing and uploading. ")
+#             try:
+#                 iter_file_path = os.path.join(dir_data, iter_file_name)
+#                 iter_data = pd.read_excel(iter_file_name)
+#                 iter_data = process_the_datafile(df_in=iter_data)
+#             except Exception as exc:
+#                 main_logger.error(msg="Error occurred when loading file: " + iter_file_path)
+#                 main_logger.error(msg=exc)
+#         else:
+#             main_logger.info(msg="\t\tFile not found. Moving on to next file. ")
+#
+#
