@@ -3,6 +3,7 @@ import download_data as dd
 import os
 import prepare_DB_server
 import setup_of_the_DB
+import data_processing_and_upload as dpu
 
 # ----------------------------------------------------------------------------------------------------------------------
 # 1. Set up logging
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     main_logger.info("---------------------------------------------------")
     main_logger.info("1. Downloading data from GIOS website. ")
     main_logger.info("Calling the download_data function...")
-    dd.download_data()
+    # dd.download_data()
 
     # 2. logging in as root to MySQL DB server to set up a schema and a user
     main_logger.info(msg="---------------------------------------------------")
@@ -45,3 +46,8 @@ if __name__ == "__main__":
     main_logger.info(msg="Executing the script: setup_of_the_DB.py")
     setup_of_the_DB.setup_of_the_DB()
 
+    # 3. uploading the CITIES and STATIONS tables
+    main_logger.info(msg="---------------------------------------------------")
+    main_logger.info(msg="3. ")
+    main_logger.info(msg="Uploading CITIES and STATIONS tables. ")
+    dpu.upload_cities_and_stations_data()
