@@ -81,22 +81,7 @@ def upload_cities_and_stations_data():
     del connection1, engine1
 
 
-def update_station_code(codes_old_new_mapping, code_in):
-    """
-    This function updates the station code name 'code_in'
-    passed to it using the dictionary 'codes_old_new_mapping'
-    :param codes_old_new_mapping:
-    :param code_in:
-    :return:
-    """
-    print("code_in: ", code_in)
-    if code_in in codes_old_new_mapping.values():
-        return code_in
-    elif code_in in codes_old_new_mapping.keys():
-        return codes_old_new_mapping[code_in]
-    else:
-        raise Exception("ERROR occurred in function update_station_code: "
-                        "the old code has not been found in the dictionary")
+
 
 # -----------------------------------
 # ----- 2. DATA_POLLUTION table -----
