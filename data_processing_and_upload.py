@@ -90,6 +90,8 @@ dir_data = os.path.expanduser("~/github_repos/PAQA/data")
 files_in_dir_data = os.listdir(os.path.expanduser("~/github_repos/PAQA/data"))
 files_in_dir_data = sorted([el for el in files_in_dir_data if el[0] == "2"])
 
+codes_old_new_mapping = open(file=, mode="rb")
+
 list_of_dfs_pollution_data = []
 
 # iterations - over pollutants' dictionary
@@ -112,7 +114,8 @@ for iter_key, iter_val in constants.pollutants_dict.items():
                 iter_data = pd.read_excel(dir_data)
                 main_logger.info(msg="Data loaded from file: " + dir_data + " - before processing. ")
                 main_logger.info(msg=iter_data.head())
-                iter_data = hf.process_the_datafile(df_in=iter_data)
+                iter_data = hf.process_the_datafile(df_in=iter_data,
+                                                    codes_old_new_mapping=codes_old_new_mapping)
                 main_logger.info(msg="Data loaded from file: " + dir_data + " - after processing. ")
                 main_logger.info(msg=iter_data.head())
                 # append the data frame to the list of all dataframes

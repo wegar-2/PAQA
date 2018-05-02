@@ -1,6 +1,9 @@
 import unidecode
 import pandas as pd
 import numpy as np
+import pickle
+import os
+import constants
 
 # ----------------------------------------------------------------------------------------------------------------------
 # The purpose of this script is to store helper functions.
@@ -56,27 +59,32 @@ def update_station_code(codes_old_new_mapping, code_in):
         raise Exception("ERROR occurred in function update_station_code: "
                         "the old code has not been found in the dictionary")
 
-df_in = iter_data
-
 
 def process_the_datafile(df_in, codes_old_new_mapping):
     """
     This function processes a data frame containing data loaded from an xlsx file with data.
     What it makes is transforming the data file into a form in which it can be loaded into the database.
     :param df_in:
+    :param codes_old_new_mapping:
     :return:
     """
     df_out = df_in.copy()
     # dropping useless rows
     df_out.drop([0, 1], axis=0, inplace=True)
     df_out.reset_index(inplace=True, drop=True)
+    print(df_out.columns[1:])
     # renaming columns - ensuring that all names are new stations' codes
     colnames = [update_station_code(codes_old_new_mapping=codes_old_new_mapping,
-                                    code_in=el) for el in list(df_in.columns())]
-    df_out.index = pd.Index(colnames)
+                                    code_in=el) for el in list(df_out.columns[1:])]
+    colnames.insert(0, "date")
+    df_out.columns = pd.Index(colnames)
+    df_out.reset_index(inplace=True, drop=False)
     # melting the DataFrame
-    df_out.melt()
+    df_out = pd.melt(df_out, id_vars=["index", "date"],
+                     value_vars=colnames[1:],
+                     var_name="new_station_code", value_name="pollution_level")
     return df_out
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 
