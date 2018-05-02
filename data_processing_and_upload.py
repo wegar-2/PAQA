@@ -81,42 +81,52 @@ def upload_cities_and_stations_data():
     del connection1, engine1
 
 
-
-
 # -----------------------------------
 # ----- 2. DATA_POLLUTION table -----
 # -----------------------------------
 
 
-def process_the_datafile(df_in):
-    """
-    This function processes a data frame containing data loaded from an xlsx file with data.
-    What it makes is transforming the data file into a form in which it can be loaded into the database.
-    :param df_in:
-    :return:
-    """
+dir_data = os.path.expanduser("~/github_repos/PAQA/data")
+files_in_dir_data = os.listdir(os.path.expanduser("~/github_repos/PAQA/data"))
+files_in_dir_data = sorted([el for el in files_in_dir_data if el[0] == "2"])
 
+list_of_dfs_pollution_data = []
 
 # iterations - over pollutants' dictionary
-# for iter_key, iter_val in constants.pollutants_dict.items():
-#     main_logger.info(msg="\n\n\n")
-#     main_logger.info(msg="--------------------------------------------------")
-#     main_logger.info(msg="Current pollutant name: " + iter_key)
-#     main_logger.info(msg="Current pollutant code: " + iter_val)
-#     # check whether data exists for the current pollutant for various years
-#     for iter_year in data_for_years:
-#         iter_file_name = "_".join([iter_year, iter_val, constants.data_frequency]) + ".xlsx"
-#         main_logger.info("Checking for file: " + iter_file_name)
-#         if iter_file_name in files_in_dir_data:
-#             main_logger.info(msg="\t\tFile found. Processing and uploading. ")
-#             try:
-#                 iter_file_path = os.path.join(dir_data, iter_file_name)
-#                 iter_data = pd.read_excel(iter_file_name)
-#                 iter_data = process_the_datafile(df_in=iter_data)
-#             except Exception as exc:
-#                 main_logger.error(msg="Error occurred when loading file: " + iter_file_path)
-#                 main_logger.error(msg=exc)
-#         else:
-#             main_logger.info(msg="\t\tFile not found. Moving on to next file. ")
-#
-#
+iter_key = "particles_10_micrometers"
+iter_val = constants.pollutants_dict[iter_key]
+for iter_key, iter_val in constants.pollutants_dict.items():
+    main_logger.info(msg="\n\n\n")
+    main_logger.info(msg="--------------------------------------------------")
+    main_logger.info(msg="Current pollutant name: " + iter_key)
+    main_logger.info(msg="Current pollutant code: " + iter_val)
+    # check whether data exists for the current pollutant for various years
+    for iter_year in list(constants.my_yearly_datasets_dict.keys()):
+        iter_file_name = "_".join([str(iter_year), iter_val, constants.data_frequency]) + ".xlsx"
+        main_logger.info("Checking for file: " + iter_file_name)
+        if iter_file_name in files_in_dir_data:
+            main_logger.info(msg="\t\tFile found. Processing and uploading. ")
+            try:
+                dir_data = os.path.join(dir_data, iter_file_name)
+                main_logger.info(msg="Reading-in the file: " + dir_data)
+                iter_data = pd.read_excel(dir_data)
+                main_logger.info(msg="Data loaded from file: " + dir_data + " - before processing. ")
+                main_logger.info(msg=iter_data.head())
+                iter_data = hf.process_the_datafile(df_in=iter_data)
+                main_logger.info(msg="Data loaded from file: " + dir_data + " - after processing. ")
+                main_logger.info(msg=iter_data.head())
+                # append the data frame to the list of all dataframes
+                list_of_dfs_pollution_data.append(iter_data)
+            except Exception as exc:
+                main_logger.error(msg="Error occurred when loading file: " + dir_data)
+                main_logger.error(msg=exc)
+        else:
+            main_logger.info(msg="\t\tFile not found. Moving on to next file. ")
+
+
+def upload_pollution_data():
+    """
+    This function uploads the data on
+    """
+    files_in_dir_data = os.listdir(os.path.expanduser("~/github_repos/PAQA/data"))
+    files_in_dir_data = sorted([el for el in files_in_dir_data if el[0] == "2"])

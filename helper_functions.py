@@ -45,10 +45,9 @@ def update_station_code(codes_old_new_mapping, code_in):
     This function updates the station code name 'code_in'
     passed to it using the dictionary 'codes_old_new_mapping'
     :param codes_old_new_mapping:
-    :param code_in:
-    :return:
+    :param code_in: code which is to be updated to its new value
+    :return: new code; if new code is passed, then it is not changed
     """
-    print("code_in: ", code_in)
     if code_in in codes_old_new_mapping.values():
         return code_in
     elif code_in in codes_old_new_mapping.keys():
@@ -56,6 +55,28 @@ def update_station_code(codes_old_new_mapping, code_in):
     else:
         raise Exception("ERROR occurred in function update_station_code: "
                         "the old code has not been found in the dictionary")
+
+df_in = iter_data
+
+
+def process_the_datafile(df_in, codes_old_new_mapping):
+    """
+    This function processes a data frame containing data loaded from an xlsx file with data.
+    What it makes is transforming the data file into a form in which it can be loaded into the database.
+    :param df_in:
+    :return:
+    """
+    df_out = df_in.copy()
+    # dropping useless rows
+    df_out.drop([0, 1], axis=0, inplace=True)
+    df_out.reset_index(inplace=True, drop=True)
+    # renaming columns - ensuring that all names are new stations' codes
+    colnames = [update_station_code(codes_old_new_mapping=codes_old_new_mapping,
+                                    code_in=el) for el in list(df_in.columns())]
+    df_out.index = pd.Index(colnames)
+    # melting the DataFrame
+    df_out.melt()
+    return df_out
 
 # ----------------------------------------------------------------------------------------------------------------------
 

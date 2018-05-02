@@ -35,7 +35,7 @@ if __name__ == "__main__":
     main_logger.info("---------------------------------------------------")
     main_logger.info("1. Downloading data from GIOS website. ")
     main_logger.info("Calling the download_data function...")
-    # dd.download_data()
+    dd.download_data()
 
     # 2. logging in as root to MySQL DB server to set up a schema and a user
     main_logger.info(msg="---------------------------------------------------")
@@ -51,3 +51,10 @@ if __name__ == "__main__":
     main_logger.info(msg="3. ")
     main_logger.info(msg="Uploading CITIES and STATIONS tables. ")
     dpu.upload_cities_and_stations_data()
+
+    # 4. uploading the POLLUTION_DATA table into the database
+    main_logger.info(msg="---------------------------------------------------")
+    main_logger.info(msg="4. ")
+    main_logger.info(msg="Uploading the POLLUTION_DATA table. ")
+
+
