@@ -1,13 +1,18 @@
+import logging
 import unidecode
 import pandas as pd
 import numpy as np
-import pickle
-import os
 import constants
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# prepare a logger
+main_logger = logging.getLogger(name="main_logger")
+# ----------------------------------------------------------------------------------------------------------------------
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # The purpose of this script is to store helper functions.
-
 
 def df_colnames_to_utf(df_in):
     """
@@ -57,7 +62,7 @@ def update_station_code(codes_old_new_mapping, code_in):
         return codes_old_new_mapping[code_in]
     else:
         raise Exception("ERROR occurred in function update_station_code: "
-                        "the old code has not been found in the dictionary")
+                        "the old code has not been found in the dictionary: " + str(code_in))
 
 
 def process_the_datafile(df_in, codes_old_new_mapping):
@@ -68,6 +73,7 @@ def process_the_datafile(df_in, codes_old_new_mapping):
     :param codes_old_new_mapping:
     :return:
     """
+    main_logger.info(msg="Inside function: process_the_datafile. ")
     df_out = df_in.copy()
     # dropping useless rows
     df_out.drop([0, 1], axis=0, inplace=True)
