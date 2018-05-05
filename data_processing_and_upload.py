@@ -147,7 +147,8 @@ def upload_pollution_data():
                     main_logger.info(msg="Data loaded from file: " + dir_data + " - before processing. ")
                     main_logger.info(msg=iter_data.head())
                     iter_data = hf.process_the_datafile(df_in=iter_data,
-                                                        codes_old_new_mapping=codes_old_new_mapping)
+                                                        codes_old_new_mapping=codes_old_new_mapping,
+                                                        data_year=iter_year)
                     main_logger.info(msg="Data loaded from file: " + dir_data + " - after processing. ")
                     main_logger.info(msg=iter_data.head())
                     # append the data frame to the list of all dataframes

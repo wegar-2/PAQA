@@ -46,13 +46,13 @@ if __name__ == "__main__":
     main_logger.info(msg="Creation of user and schema: ")
     prepare_DB_server.prepare_DB_server()
     main_logger.info(msg="Executing the script: setup_of_the_DB.py")
-    # setup_of_the_DB.setup_of_the_DB()
+    setup_of_the_DB.setup_of_the_DB()
 
     # 3. uploading the CITIES and STATIONS tables
     main_logger.info(msg="---------------------------------------------------")
     main_logger.info(msg="3. ")
     main_logger.info(msg="Uploading CITIES and STATIONS tables. ")
-    # dpu.upload_cities_and_stations_data()
+    dpu.upload_cities_and_stations_data()
 
     # 4. uploading the POLLUTION_DATA table into the database
     main_logger.info(msg="---------------------------------------------------")

@@ -45,4 +45,13 @@ stations_cities_cols = ['Kod stacji', 'Stary Kod stacji', 'Miejscowosc', 'Nazwa 
 dir_data_stations = os.path.expanduser("~/github_repos/PAQA/data/metadane_stacje_i_stanowiska.xlsx")
 sheetname_data_stations = "Stacje"
 
+# list below stores names of stations that are present in the data but are
+# not present in the data dictionaries
+list_of_incorrect_stations_names = ["PkRzeszWIOSLang", "KpPASBTXBydgKujawskie"]
 
+# dictionary below stores
+dict_of_manually_added_stations = {"LbKra": "LbKra-awWSSE",
+                                   "LbZaoscHrubieszowsk": "LbZamoscHrubieszowsk"}
+
+
+data_df_top_rows_names_non2016 = {"Kod stacji", "Wskaźnik", "Numer", ""}

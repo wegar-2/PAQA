@@ -12,3 +12,8 @@ class UnknownStationCodeError(Error):
     pass
 
 
+class InvalidYearError(Error):
+    """ This error is thrown when invalid year is passed to remove_redundant_top_rows_from_sheet
+    helper function """
+    pass
+
