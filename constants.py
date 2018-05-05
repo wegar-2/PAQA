@@ -15,9 +15,7 @@ metadata_sets_dict = {"kody_stacji_pomiarowych": "102", "metadane_stacje_i_stano
 
 my_yearly_datasets_dict = {2000: "223", 2001: "224", 2002: "225", 2003: "226", 2004: "202", 2005: "203",
                            2006: "227", 2007: "228", 2008: "229", 2009: "230", 2010: "231", 2011: "232",
-                           2012: "233", 2013: "234", 2014: "235", 2015: "236"
-                           # , 2016: "242"
-                           }
+                           2012: "233", 2013: "234", 2014: "235", 2015: "236", 2016: "242"}
 
 my_giodo_pjp_url = "http://powietrze.gios.gov.pl/pjp/archives/downloadFile"
 
@@ -47,11 +45,12 @@ sheetname_data_stations = "Stacje"
 
 # list below stores names of stations that are present in the data but are
 # not present in the data dictionaries
-list_of_incorrect_stations_names = ["PkRzeszWIOSLang", "KpPASBTXBydgKujawskie"]
+list_of_incorrect_stations_names = ["PkRzeszWIOSLang", "KpPASBTXBydgKujawskie",
+                                    "DsOlesnicaPM.1", 'KpPASBTXBydgLPKiW',
+                                    'KpPASBTXBydgTorunskie', 'KpPASBTXBydgZachem',
+                                    'KpPASTorunWalyGenSik']
 
-# dictionary below stores
+# dictionary below stores manually added mappings of stations' codes
 dict_of_manually_added_stations = {"LbKra": "LbKra-awWSSE",
                                    "LbZaoscHrubieszowsk": "LbZamoscHrubieszowsk"}
 
-
-data_df_top_rows_names_non2016 = {"Kod stacji", "Wskaźnik", "Numer", ""}

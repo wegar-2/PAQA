@@ -134,6 +134,7 @@ def upload_pollution_data():
         main_logger.info(msg="\n\n--------------------------------------------")
         main_logger.info(msg="Starting iterations over years for pollutant: " + iter_val)
         for iter_year in list(constants.my_yearly_datasets_dict.keys()):
+            main_logger.info(msg="\n\n\n-------------------------------------------------------------")
             # 2.1. gathering data for a given pollutant
             iter_file_name = "_".join([str(iter_year), iter_val, constants.data_frequency]) + ".xlsx"
             list_of_source_files.append(iter_file_name)
@@ -158,15 +159,15 @@ def upload_pollution_data():
                     main_logger.error(msg=exc)
             else:
                 main_logger.info(msg="\t\tFile not found. Moving on to next file. ")
-            main_logger.info(msg="Finished gathering data for pollutant: " + iter_val)
-            # 2.2. uploading data for a given pollutant
-            main_logger.info(msg="Uploading data. ")
-            # df_to_upload = pd.concat(objs=list_of_dfs_pollution_data, axis=0)
-            db_connection = db_engine.connect()
-            # df_to_upload.to_sql(name="POLLUTION_DATA", con=db_connection, if_exists="append", index=False)
-            # clear the list of DataFrames before moving on to the next pollutant
-            main_logger.info("Current length of the list_of_dfs: " + str(len(list_of_dfs_pollution_data)))
-            list_of_dfs_pollution_data.clear()
+        main_logger.info(msg="Finished gathering data for pollutant: " + iter_val)
+        # 2.2. uploading data for a given pollutant
+        main_logger.info(msg="Uploading data. ")
+        # df_to_upload = pd.concat(objs=list_of_dfs_pollution_data, axis=0)
+        db_connection = db_engine.connect()
+        # df_to_upload.to_sql(name="POLLUTION_DATA", con=db_connection, if_exists="append", index=False)
+        # clear the list of DataFrames before moving on to the next pollutant
+        main_logger.info("Current length of the list_of_dfs: " + str(len(list_of_dfs_pollution_data)))
+        list_of_dfs_pollution_data.clear()
     # ------------------------------------------------------------------------------------------------------------------
     # 3. Printing summary on the loaded data
     main_logger.info(msg="\n\n\n")

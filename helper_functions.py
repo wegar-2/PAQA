@@ -58,13 +58,20 @@ def update_station_code(codes_old_new_mapping, code_in):
     :return: new code; if new code is passed, then it is not changed
     """
     if code_in in codes_old_new_mapping.values():
-        return code_in
+        code_out = code_in
     elif code_in in codes_old_new_mapping.keys():
-        return codes_old_new_mapping[code_in]
+        code_out = codes_old_new_mapping[code_in]
+    elif code_in in constants.dict_of_manually_added_stations.keys():
+        code_out = constants.dict_of_manually_added_stations[code_in]
+    elif code_in in constants.dict_of_manually_added_stations.values():
+        code_out = code_in
     else:
         raise errors.UnknownStationCodeError("ERROR occurred in function update_station_code: "
                                              "the old code has not been found in the dictionary: " +
                                              str(code_in))
+    main_logger.info(msg="\t\tInside update_station_code; mapping of the codes: ")
+    main_logger.info(msg="\t\t" + code_in + " ===> " + code_out)
+    return code_out
 
 
 def remove_redundant_top_rows_from_sheet(df_in, data_year):
@@ -75,9 +82,17 @@ def remove_redundant_top_rows_from_sheet(df_in, data_year):
     :param data_year: int, the year that is covered by the data in the data frame df_in
     :return: processed data frame
     """
+    main_logger.info(msg="Inside remove_redundant_top_rows_from_sheet function. ")
     df_out = df_in.copy()
+    main_logger.info(msg="Top rows of the obtained dataframe: ")
+    main_logger.info(msg=df_out.head())
     # processing of non-2016 data
     if data_year != 2016:
+        # check whether the first line contains columns' numbering
+        if df_out.columns[0] == "Numer":
+            df_out.columns = pd.Index(df_out.loc[0, :])
+            df_out.drop([0], inplace=True, axis=0)
+            df_out.reset_index(drop=True, inplace=True)
         df_out.drop([0, 1], axis=0, inplace=True)
         df_out.reset_index(inplace=True, drop=True)
     # separate approach to 2016 data
@@ -92,6 +107,10 @@ def remove_redundant_top_rows_from_sheet(df_in, data_year):
     else:
         raise errors.InvalidYearError("Error! Invalid year has been passed to the "
                                       "remove_redundant_top_rows_from_sheet function. ")
+    main_logger.info("Processed data frame on the exit from remove_redundant_top_rows_from_sheet function: ")
+    main_logger.info(msg=df_out.head())
+    main_logger.info(msg="Quitting the remove_redundant_top_rows_from_sheet function...")
+    return df_out
 
 
 def process_the_datafile(df_in, codes_old_new_mapping, data_year):
@@ -107,11 +126,19 @@ def process_the_datafile(df_in, codes_old_new_mapping, data_year):
     # dropping useless rows
     df_out = remove_redundant_top_rows_from_sheet(df_in=df_out, data_year=data_year)
     colnames = list()
+    # dropping columns that are in the list list_of_incorrect_stations_names
+    for iter_colname in constants.list_of_incorrect_stations_names:
+        if iter_colname in list(df_out.columns):
+            df_out.drop(labels=[iter_colname], axis=1, inplace=True)
     # renaming columns - ensuring that all names are new stations' codes
+    main_logger.info(msg="Columns' names of df_out: ")
+    main_logger.info(msg=list(df_out.columns))
+    main_logger.info(msg="Length of df_out.columns: " + str(len(df_out.columns)))
     for iter_num, iter_val in enumerate(list(df_out.columns[1:])):
         try:
-            colnames[iter_num] = update_station_code(codes_old_new_mapping=codes_old_new_mapping,
-                                                     code_in=iter_val)
+            temp = update_station_code(codes_old_new_mapping=codes_old_new_mapping,
+                                       code_in=iter_val)
+            colnames.append(temp)
         except errors.UnknownStationCodeError:
             main_logger.error("Error occurred during the call to update_station_code function; an unknown station code "
                               "encountered! ")
@@ -120,6 +147,9 @@ def process_the_datafile(df_in, codes_old_new_mapping, data_year):
                                   "related to the fact that the code passed to the called function is absent. ")
             main_logger.error(msg=exc)
     colnames.insert(0, "date")
+    main_logger.info(msg="Columns' names of df_out after processing: ")
+    main_logger.info(msg=colnames)
+    main_logger.info(msg="Length of colnames: " + str(len(colnames)))
     df_out.columns = pd.Index(colnames)
     df_out.reset_index(inplace=True, drop=False)
     # melting the DataFrame
