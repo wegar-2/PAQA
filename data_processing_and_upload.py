@@ -101,6 +101,7 @@ def upload_pollution_data():
                         "The order of execution of scripts might have been incorrect. ")
     list_of_source_files = list()
     list_of_dfs_pollution_data = list()
+    dict_of_dataframes = dict()
     db_engine = sa.create_engine("mysql+mysqldb://PAQA_USER:pass@localhost/PAQA_DB")
     # 1.2. printing info on the range of data being covered
     main_logger.info(msg="\n\nYears covered:")
@@ -135,7 +136,7 @@ def upload_pollution_data():
         main_logger.info(msg="Starting iterations over years for pollutant: " + iter_val)
         for iter_year in list(constants.my_yearly_datasets_dict.keys()):
             main_logger.info(msg="\n\n\n-------------------------------------------------------------")
-            # 2.1. gathering data for a given pollutant
+            # gathering data for a given pollutant
             iter_file_name = "_".join([str(iter_year), iter_val, constants.data_frequency]) + ".xlsx"
             list_of_source_files.append(iter_file_name)
             main_logger.info("Checking for file: " + iter_file_name)
@@ -147,24 +148,24 @@ def upload_pollution_data():
                     iter_data = pd.read_excel(dir_data)
                     main_logger.info(msg="Data loaded from file: " + dir_data + " - before processing. ")
                     main_logger.info(msg=iter_data.head())
-                    iter_data = hf.process_the_datafile(df_in=iter_data,
-                                                        codes_old_new_mapping=codes_old_new_mapping,
+                    iter_data = hf.process_the_datafile(df_in=iter_data, codes_old_new_mapping=codes_old_new_mapping,
                                                         data_year=iter_year)
                     main_logger.info(msg="Data loaded from file: " + dir_data + " - after processing. ")
                     main_logger.info(msg=iter_data.head())
-                    # append the data frame to the list of all dataframes
+                    # append the data frame to the list of all DataFrames
                     list_of_dfs_pollution_data.append(iter_data)
                 except Exception as exc:
                     main_logger.error(msg="Error occurred when loading file: " + constants.data_dir)
                     main_logger.error(msg=exc)
             else:
                 main_logger.info(msg="\t\tFile not found. Moving on to next file. ")
+        # adding the data to data dictionary
         main_logger.info(msg="Finished gathering data for pollutant: " + iter_val)
-        # 2.2. uploading data for a given pollutant
-        main_logger.info(msg="Uploading data. ")
-        # df_to_upload = pd.concat(objs=list_of_dfs_pollution_data, axis=0)
-        db_connection = db_engine.connect()
-        # df_to_upload.to_sql(name="POLLUTION_DATA", con=db_connection, if_exists="append", index=False)
+        if len(list_of_dfs_pollution_data) == 0:
+            main_logger.info(msg="\n\n\nFor pollutant: " + iter_val + " no data has been found!!!\n\n\n")
+            dict_of_dataframes[iter_val] = None
+        else:
+            dict_of_dataframes[iter_val] = pd.concat(objs=list_of_dfs_pollution_data, axis=0)
         # clear the list of DataFrames before moving on to the next pollutant
         main_logger.info("Current length of the list_of_dfs: " + str(len(list_of_dfs_pollution_data)))
         list_of_dfs_pollution_data.clear()
@@ -172,8 +173,26 @@ def upload_pollution_data():
     # 3. Printing summary on the loaded data
     main_logger.info(msg="\n\n\n")
     main_logger.info(msg="Printing list of files from which the data on pollutions has been loaded: ")
-    for iter_num, iter_val in enumerate(list_of_source_files):
+    for iter_num, iter_val in enumerate(sorted(list_of_source_files)):
         main_logger.info(msg="\t" + str(iter_num + 1) + ". " + iter_val)
+    # ------------------------------------------------------------------------------------------------------------------
+    # 4. data upload into the POLLUTION_DATA table
+    main_logger.info(msg="\n\n\nUploading data into the POLLUTION_DATA table. ")
+    list_of_dfs_to_concat = []
+    for iter_key, iter_val in dict_of_dataframes.items():
+        main_logger.info(msg=iter_key)
+        if iter_val is not None:
+            main_logger.info(msg=iter_val.head())
+            list_of_dfs_to_concat.append(iter_val)
+        else:
+            main_logger.info(msg="no data gathered for this pollutant...")
+    main_logger.info(msg="Concatenating all the DataFrames with the data before uploading into POLLUTION_DATA table...")
+    df_to_upload = pd.concat(objs=list_of_dfs_to_concat, axis=0)
+    main_logger.info(msg="After DataFrames concatenation - data ready to upload: ")
+    main_logger.info(msg=df_to_upload.head())
+    main_logger.info(msg=df_to_upload.tail())
+    db_connection = db_engine.connect()
+    db_connection.close()
     main_logger.info(msg="Quitting the upload_pollution_data function. ")
 
 

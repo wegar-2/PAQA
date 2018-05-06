@@ -152,6 +152,14 @@ def process_the_datafile(df_in, codes_old_new_mapping, data_year):
     main_logger.info(msg="Length of colnames: " + str(len(colnames)))
     df_out.columns = pd.Index(colnames)
     df_out.reset_index(inplace=True, drop=False)
+    if data_year == 2016:
+        main_logger.info("\n\n\nReplacing the decimal separators ',' =======> '.' for Y2016 data. ")
+        main_logger.info("Data before separators conversion: ")
+        main_logger.info(msg=df_out.head())
+        df_out = replace_decimal_separators(df_in=df_out, old_separator=",", new_separator=".")
+        main_logger.info("Data after separators conversion: ")
+        main_logger.info(msg=df_out.head())
+        main_logger.info(msg="\n\n\n")
     # melting the DataFrame
     df_out = pd.melt(df_out, id_vars=["index", "date"],
                      value_vars=colnames[1:],
@@ -159,15 +167,14 @@ def process_the_datafile(df_in, codes_old_new_mapping, data_year):
     return df_out
 
 
+def replace_decimal_separators(df_in, old_separator, new_separator):
+    def my_replace(x, old_sep, new_sep):
+        return [float(str(el).replace(old_sep, new_sep)) for el in list(x)]
+    df_out = df_in.copy()
+    df_out1 = df_out.iloc[:, 0:2]
+    df_out2 = df_out.iloc[:, 2:]
+    df_out3 = df_out2.apply(func=my_replace, axis=1, args=(old_separator, new_separator))
+    return pd.concat(objs=[df_out1, df_out3], axis=1)
+
 # ----------------------------------------------------------------------------------------------------------------------
-
-my_dir = "/home/herhor/github_repos/PAQA/data/2015_SO2_24g.xlsx"
-data1 = pd.read_excel(my_dir)
-data1.head()
-# data1.reset_index(drop=False, inplace=True)
-
-my_dir2 = "/home/herhor/github_repos/PAQA/data/2016_SO2_24g.xlsx"
-data2 = pd.read_excel(my_dir2)
-data2.head()
-data2.reset_index(inplace=True)
 
