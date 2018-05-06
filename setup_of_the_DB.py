@@ -60,8 +60,7 @@ def setup_of_the_DB():
                  sa.Column('id_pollution_data', sa.INT, primary_key=True, autoincrement=True, nullable=False),
                  sa.Column('id_station', sa.INT, sa.ForeignKey('STATIONS.id_station'), nullable=False),
                  sa.Column('measurement_date', sa.DATE, nullable=False),
-                 sa.Column('measurement_value', sa.FLOAT(18, 4), nullable=False),
-                 sa.Column('measurement_unit', sa.VARCHAR(10), nullable=False),
+                 sa.Column('measurement_value', sa.FLOAT(18, 4), nullable=True),
                  sa.Column('pollutant', sa.VARCHAR(5), nullable=False))
         metadata1.create_all()
     except Exception as exc:

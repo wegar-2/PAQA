@@ -7,6 +7,7 @@ import unidecode
 import constants
 import pickle
 import helper_functions as hf
+import tqdm
 
 # 0. get the main_logger
 main_logger = logging.getLogger(name="main_logger")
@@ -52,8 +53,9 @@ def upload_cities_and_stations_data():
         pickle.dump(station_codes_mappings, file=target_file)
     # 2.2. prepare the data frame with data on stations
     df_stations = data1.loc[:, constants.stations_cities_cols]
+    df_stations.loc[df_stations.loc[:, "Miejscowosc"].isna(), "Miejscowosc"] = "OTHER"
     df_stations = pd.merge(left=df_stations, right=df_cities,
-                           left_on="Miejscowosc", right_on="city_name")
+                           left_on="Miejscowosc", right_on="city_name", how="left")
     df_stations.drop(["city_name", "Miejscowosc"], axis=1, inplace=True)
     df_stations.reset_index(inplace=True, drop=False)
     df_stations.rename(columns=constants.dict_of_stations_colnames, inplace=True)
@@ -177,22 +179,73 @@ def upload_pollution_data():
         main_logger.info(msg="\t" + str(iter_num + 1) + ". " + iter_val)
     # ------------------------------------------------------------------------------------------------------------------
     # 4. data upload into the POLLUTION_DATA table
+    # 4.1. prepare full list of dataframes that need to be concatenated before upload into the DB
     main_logger.info(msg="\n\n\nUploading data into the POLLUTION_DATA table. ")
     list_of_dfs_to_concat = []
     for iter_key, iter_val in dict_of_dataframes.items():
         main_logger.info(msg=iter_key)
         if iter_val is not None:
             main_logger.info(msg=iter_val.head())
+            iter_val["pollutant"] = iter_key
             list_of_dfs_to_concat.append(iter_val)
         else:
             main_logger.info(msg="no data gathered for this pollutant...")
+    # 4.2. concatenate the data frames and process the data to make it ready for the upload
     main_logger.info(msg="Concatenating all the DataFrames with the data before uploading into POLLUTION_DATA table...")
     df_to_upload = pd.concat(objs=list_of_dfs_to_concat, axis=0)
-    main_logger.info(msg="After DataFrames concatenation - data ready to upload: ")
-    main_logger.info(msg=df_to_upload.head())
-    main_logger.info(msg=df_to_upload.tail())
+    df_to_upload.drop(["index"], axis=1, inplace=True)
+    df_to_upload.reset_index(drop=False, inplace=True)
+    df_to_upload.loc[:, "index"] = df_to_upload.loc[:, "index"] + 1
+    df_to_upload.rename(columns={"index": "id_pollution_data",
+                                 "date": "measurement_date",
+                                 "pollution_level": "measurement_value"}, inplace=True)
+    # 4.3. add column with the station ID
     db_connection = db_engine.connect()
+    df_stations = pd.read_sql(sql="SELECT * FROM STATIONS;", con=db_connection)
+    main_logger.info(msg="Displaying the head of STATIONS table: ")
+    main_logger.info(msg=df_stations.head())
+    main_logger.info(msg="No of rows before join: " + str(df_to_upload.shape[0]))
+    df_to_upload_final = pd.merge(left=df_to_upload, right=df_stations, left_on="new_station_code",
+                                  right_on="new_station_code", how="left")
+    df_null_stations = df_to_upload_final.loc[df_to_upload_final.loc[:, "id_station"].isna(), :]
+    main_logger.info(msg="\n\n\nRow that did not get a match of station: ")
+    main_logger.info(msg=df_null_stations)
+    main_logger.info(msg=set(df_null_stations.loc[:, "new_station_code"]))
+    main_logger.info(msg="\n\n\nNo of rows after join: " + str(df_to_upload_final.shape[0]))
+    main_logger.info(msg="Displaying the head of final table: ")
+    main_logger.info(msg=df_to_upload_final.head())
+    df_to_upload_final = df_to_upload_final.loc[:, ["id_pollution_data", "measurement_date", "measurement_value",
+                                                    "pollutant", "id_station"]]
+    df_to_upload_final.reset_index(drop=False, inplace=True)
+    df_to_upload_final.drop(["id_pollution_data"], axis=1, inplace=True)
+    df_to_upload_final.rename(columns={"index": "id_pollution_data"}, inplace=True)
+    df_to_upload_final.loc[:, "id_pollution_data"] = df_to_upload_final.loc[:, "id_pollution_data"] + 1
+    # 4.4. upload the data
+    main_logger.info(msg="After DataFrames concatenation - data ready to upload: ")
+    main_logger.info(msg=df_to_upload_final.head())
+    main_logger.info(msg=df_to_upload_final.tail())
+    main_logger.info(msg="Starting upload of the data into POLLUTION_DATA table. ")
+    # df_to_upload_final.to_sql(name="POLLUTION_DATA", con=db_connection, if_exists="append", index=False)
+    # insert row by row
+    db_metadata = sa.MetaData(bind=db_engine)
+    data_table = sa.Table("POLLUTION_DATA", db_metadata, autoload=True)
+    for iter_num, iter_row in tqdm.tqdm(df_to_upload_final.iterrows()):
+        if iter_row["measurement_value"] is np.nan:
+            measurement_value = None
+        else:
+            measurement_value = iter_row["measurement_value"]
+        ins = data_table.insert().values(id_pollution_data=iter_row["id_pollution_data"],
+                                         id_station=iter_row["id_station"],
+                                         measurement_date=iter_row["measurement_date"],
+                                         measurement_value=measurement_value,
+                                         pollutant=iter_row["pollutant"])
+        try:
+            db_connection.execute(ins)
+        except Exception as exc:
+            main_logger.error(msg="Error occurred when inserting a row into POLLUTION_DATA...")
+            main_logger.error(msg=exc)
     db_connection.close()
+    main_logger.info(msg="Finished upload of the data into POLLUTION_DATA table. ")
     main_logger.info(msg="Quitting the upload_pollution_data function. ")
 
 

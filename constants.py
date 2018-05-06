@@ -52,5 +52,4 @@ list_of_incorrect_stations_names = ["PkRzeszWIOSLang", "KpPASBTXBydgKujawskie",
 
 # dictionary below stores manually added mappings of stations' codes
 dict_of_manually_added_stations = {"LbKra": "LbKra-awWSSE",
-                                   "LbZaoscHrubieszowsk": "LbZamoscHrubieszowsk"}
-
+                                   "LbZaoscHrubieszowsk": "LbZamoHrubie"}
