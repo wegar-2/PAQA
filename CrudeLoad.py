@@ -3,18 +3,24 @@ import numpy as np
 import sqlalchemy as sa
 import os
 import unidecode
-import constants
 import pickle
 import helper_functions as hf
-import tqdm
 
+
+# ----------------------------------------------------------------------------------------------------------------------
+# 0. CONSTANTS
+data_dir = '/home/herhor/github_repos/PAQA/data'
+dir_data_stations = os.path.join(data_dir, "metadane_stacje_i_stanowiska.xlsx")
+sheetname_data_stations = "Stacje"
+stations_cities_cols = ['Kod stacji', 'Stary Kod stacji', 'Miejscowosc', 'Nazwa stacji']
+user_string = ""
+user_pass = ""
 
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # 1. PREPARE TABLES ON THE SERVER
 # 1.1. try to connect to the db
-user_string = ""
-user_pass = ""
+
 con_string = "mysql://" + user_string + ":" + user_pass + "@localhost/gios"
 try:
     mysqldb_engine = sa.create_engine(con_string)
@@ -60,11 +66,8 @@ except Exception as exc:
 # ----------------------------------------------------------------------------------------------------------------------
 # 2. LOAD DATA ON CITIES AND STATIONS INTO THE SERVER
 # ----------- 2.1. prepare data on cities -----------
-print(os.getcwd())
-dir_data_stations = os.path.expanduser("~/.../metadane_stacje_i_stanowiska.xlsx")
-sheetname_data_stations = "Stacje"
 data1 = pd.read_excel(dir_data_stations, sheet_name=sheetname_data_stations)
-data1 = hf.df_cols_to_utf(df_in=hf.df_colnames_to_utf(df_in=data1), list_of_cols=constants.stations_cities_cols)
+data1 = hf.df_cols_to_utf(df_in=hf.df_colnames_to_utf(df_in=data1), list_of_cols=stations_cities_cols)
 distinct_cities = list(set(list(data1.loc[:, "Miejscowosc"])))
 if np.nan in distinct_cities:
     distinct_cities.remove(np.nan)
@@ -82,7 +85,6 @@ df_cities.loc[:, "id_city"] = df_cities.loc[:, "id_city"] + 1
 
 # ----------- 2.2. prepare data on stations -----------
 # save dictionary of mappings of stations' names OLD -> NEW [to be used later]
-data_dir = '.../data_xlsx_files'
 station_codes_mappings = dict(zip(list(data1.loc[:, 'Stary Kod stacji']), list(data1.loc[:, 'Kod stacji'])))
 with open(os.path.join(data_dir, "stations_code_mappings.p"), mode='wb') as target_file:
     pickle.dump(station_codes_mappings, file=target_file)
@@ -117,8 +119,8 @@ del connection1, mysqldb_engine
 # 3.1. setup of variables
 files_in_dir_data = os.listdir(path=data_dir)
 files_in_dir_data = sorted([el for el in files_in_dir_data if el[0] == "2"])
-if os.path.exists(os.path.join(constants.data_dir, "stations_code_mappings.p")):
-    codes_old_new_mapping = open(file=os.path.join(constants.data_dir, "stations_code_mappings.p"), mode="rb")
+if os.path.exists(os.path.join(data_dir, "stations_code_mappings.p")):
+    codes_old_new_mapping = open(file=os.path.join(data_dir, "stations_code_mappings.p"), mode="rb")
     codes_old_new_mapping = pickle.load(file=codes_old_new_mapping)
 else:
     raise Exception("ERROR! The file with mapping of old stations' codes to new stations' codes does not exist. "
@@ -189,18 +191,6 @@ db_metadata = sa.MetaData(bind=db_engine)
 connection1 = db_engine.connect()
 df_to_upload_final.to_sql(name="POLLUTION_DATA", con=connection1, if_exists="append", index=False)
 # data_table = sa.Table("POLLUTION_DATA", db_metadata, autoload=True)
-
-for iter_num, iter_row in tqdm.tqdm(df_to_upload_final.iterrows()):
-    if iter_row["measurement_value"] is np.nan:
-        measurement_value = None
-    else:
-        measurement_value = iter_row["measurement_value"]
-    ins = data_table.insert().values(id_pollution_data=iter_row["id_pollution_data"],
-                                     id_station=iter_row["id_station"],
-                                     measurement_date=iter_row["measurement_date"],
-                                     measurement_value=measurement_value,
-                                     pollutant=iter_row["pollutant"])
-    db_connection.execute(ins)
 db_connection.close()
 # ----------------------------------------------------------------------------------------------------------------------
 
